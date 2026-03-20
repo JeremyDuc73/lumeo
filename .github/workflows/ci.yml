@@ -74,12 +74,19 @@ jobs:
 
       - name: Create .env for Symfony
         run: |
-          echo "APP_ENV=test" > .env
-          echo "APP_SECRET=ci-secret-not-real" >> .env
-          echo "DATABASE_URL=postgresql://lumeo:lumeo@localhost:5432/lumeo?serverVersion=16&charset=utf8" >> .env
-          echo "MERCURE_URL=http://localhost:9090/.well-known/mercure" >> .env
-          echo "MERCURE_PUBLIC_URL=http://localhost:9090/.well-known/mercure" >> .env
-          echo "MERCURE_JWT_SECRET=ci-mercure-secret" >> .env
+          echo 'APP_ENV=test' > .env
+          echo 'APP_SECRET=ci-secret-not-real' >> .env
+          echo 'DATABASE_URL=postgresql://lumeo:lumeo@localhost:5432/lumeo?serverVersion=16&charset=utf8' >> .env
+          echo 'MESSENGER_TRANSPORT_DSN=doctrine://default?auto_setup=0' >> .env
+          echo 'MAILER_DSN=null://null' >> .env
+          echo "CORS_ALLOW_ORIGIN='^https?://localhost(:[0-9]+)?$'" >> .env
+          echo 'JWT_SECRET_KEY=%kernel.project_dir%/config/jwt/private.pem' >> .env
+          echo 'JWT_PUBLIC_KEY=%kernel.project_dir%/config/jwt/public.pem' >> .env
+          echo 'JWT_PASSPHRASE=ci-passphrase' >> .env
+          echo 'STRIPE_SECRET_KEY=sk_test_dummy' >> .env
+          echo 'MERCURE_URL=http://localhost:9090/.well-known/mercure' >> .env
+          echo 'MERCURE_PUBLIC_URL=http://localhost:9090/.well-known/mercure' >> .env
+          echo 'MERCURE_JWT_SECRET=ci-mercure-secret' >> .env
 
       - run: composer install --no-interaction --prefer-dist
 
