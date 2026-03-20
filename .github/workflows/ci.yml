@@ -76,7 +76,7 @@ jobs:
         run: |
           echo "APP_ENV=test" > .env
           echo "APP_SECRET=ci-secret-not-real" >> .env
-          echo "DATABASE_URL=postgresql://lumeo:lumeo@localhost:5432/lumeo_test?serverVersion=16" >> .env
+          echo "DATABASE_URL=postgresql://lumeo:lumeo@localhost:5432/lumeo?serverVersion=16&charset=utf8" >> .env
           echo "MERCURE_URL=http://localhost:9090/.well-known/mercure" >> .env
           echo "MERCURE_PUBLIC_URL=http://localhost:9090/.well-known/mercure" >> .env
           echo "MERCURE_JWT_SECRET=ci-mercure-secret" >> .env
@@ -86,12 +86,12 @@ jobs:
       - name: Run migrations
         run: php bin/console doctrine:migrations:migrate --no-interaction --env=test
         env:
-          DATABASE_URL: postgresql://lumeo:lumeo@localhost:5432/lumeo_test?serverVersion=16
+          DATABASE_URL: postgresql://lumeo:lumeo@localhost:5432/lumeo?serverVersion=16
 
       - name: Run PHPUnit
         run: php bin/phpunit
         env:
-          DATABASE_URL: postgresql://lumeo:lumeo@localhost:5432/lumeo_test?serverVersion=16
+          DATABASE_URL: postgresql://lumeo:lumeo@localhost:5432/lumeo?serverVersion=16
           APP_ENV: test
 
   # ---- Docker build smoke test ----
