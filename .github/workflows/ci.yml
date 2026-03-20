@@ -77,6 +77,9 @@ jobs:
           echo "APP_ENV=test" > .env
           echo "APP_SECRET=ci-secret-not-real" >> .env
           echo "DATABASE_URL=postgresql://lumeo:lumeo@localhost:5432/lumeo_test?serverVersion=16" >> .env
+          echo "MERCURE_URL=http://localhost:9090/.well-known/mercure" >> .env
+          echo "MERCURE_PUBLIC_URL=http://localhost:9090/.well-known/mercure" >> .env
+          echo "MERCURE_JWT_SECRET=ci-mercure-secret" >> .env
 
       - run: composer install --no-interaction --prefer-dist
 
