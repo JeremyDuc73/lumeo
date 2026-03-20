@@ -72,6 +72,12 @@ jobs:
           key: composer-${{ hashFiles('back/composer.lock') }}
           restore-keys: composer-
 
+      - name: Create .env for Symfony
+        run: |
+          echo "APP_ENV=test" > .env
+          echo "APP_SECRET=ci-secret-not-real" >> .env
+          echo "DATABASE_URL=postgresql://lumeo:lumeo@localhost:5432/lumeo_test?serverVersion=16" >> .env
+
       - run: composer install --no-interaction --prefer-dist
 
       - name: Run migrations

@@ -9,7 +9,6 @@ const authStore = useAuthStore();
 const notifStore = useNotificationsStore();
 const toast = useToast();
 
-
 defineProps<{
     className?: string;
 }>();
@@ -77,14 +76,7 @@ function startNotifSubscription() {
                     const id = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
                     const type = data?.event || data?.type || 'notification';
                     const link = data?.conversationId ? `/profile/conversations/${data.conversationId}` : undefined;
-                    const title =
-                        type === 'message.created'
-                            ? 'Nouveau message'
-                            : type === 'reservation.created'
-                              ? 'Nouvelle réservation'
-                              : type === 'reservation.completed'
-                                ? 'Service terminé'
-                                : 'Notification';
+                    const title = type === 'message.created' ? 'Nouveau message' : type === 'reservation.created' ? 'Nouvelle réservation' : type === 'reservation.completed' ? 'Service terminé' : 'Notification';
                     let detail = extractMessageText(data);
                     if (type === 'message.created') {
                         // Always fetch conversation to ensure we show the newest message content

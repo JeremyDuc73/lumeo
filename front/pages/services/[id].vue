@@ -80,7 +80,7 @@ async function doPurchase() {
     }
 }
 
-async function purchase() {
+function purchase() {
     if (!auth.hasToken()) {
         toast.add({ severity: 'warn', summary: 'Connexion requise', detail: 'Veuillez vous connecter pour réserver.', life: 4000 });
         return navigateTo('/login');
@@ -113,7 +113,7 @@ function goEdit() {
     router.push(`/services/${id.value}/edit`);
 }
 
-async function removeService() {
+function removeService() {
     if (!auth.hasToken()) {
         return navigateTo('/login');
     }

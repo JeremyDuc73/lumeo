@@ -140,7 +140,7 @@ onBeforeUnmount(() => {
     if (unsubscribe) unsubscribe();
 });
 
-async function completeReservation() {
+function completeReservation() {
     try {
         const reservationId = conversation.value?.reservation?.id;
         if (!reservationId) return;
@@ -164,32 +164,33 @@ async function completeReservation() {
                         accept: async () => {
                             try {
                                 await $fetch(`${config.public.apiBase}/reservations/${reservationId}/complete`, {
-                                method: 'POST',
-                                headers: { Authorization: `Bearer ${auth.cookies.get('token')}` }
-                            });
-                            toast.add({ severity: 'success', summary: 'Service terminé', detail: 'La conversation est archivée et le service redevient disponible.', life: 5000 });
-                            await loadConversation();
-                        } catch (e: any) {
-                            const status = e?.status || e?.response?.status;
-                            if (status === 404 || status === 405) {
-                                try {
-                                    await $fetch(`${config.public.apiBase}/conversations/${id.value}/complete`, {
-                                        method: 'POST',
-                                        headers: { Authorization: `Bearer ${auth.cookies.get('token')}` }
-                                    });
-                                    toast.add({ severity: 'success', summary: 'Service terminé', detail: 'La conversation est archivée et le service redevient disponible.', life: 5000 });
-                                    await loadConversation();
-                                } catch (err: any) {
-                                    const msg = err?.data?.error || err?.message || 'Impossible de terminer le service.';
+                                    method: 'POST',
+                                    headers: { Authorization: `Bearer ${auth.cookies.get('token')}` }
+                                });
+                                toast.add({ severity: 'success', summary: 'Service terminé', detail: 'La conversation est archivée et le service redevient disponible.', life: 5000 });
+                                await loadConversation();
+                            } catch (e: any) {
+                                const status = e?.status || e?.response?.status;
+                                if (status === 404 || status === 405) {
+                                    try {
+                                        await $fetch(`${config.public.apiBase}/conversations/${id.value}/complete`, {
+                                            method: 'POST',
+                                            headers: { Authorization: `Bearer ${auth.cookies.get('token')}` }
+                                        });
+                                        toast.add({ severity: 'success', summary: 'Service terminé', detail: 'La conversation est archivée et le service redevient disponible.', life: 5000 });
+                                        await loadConversation();
+                                    } catch (err: any) {
+                                        const msg = err?.data?.error || err?.message || 'Impossible de terminer le service.';
+                                        toast.add({ severity: 'error', summary: 'Erreur', detail: msg, life: 6000 });
+                                    }
+                                } else {
+                                    const msg = e?.data?.error || e?.message || 'Impossible de terminer le service.';
                                     toast.add({ severity: 'error', summary: 'Erreur', detail: msg, life: 6000 });
                                 }
-                            } else {
-                                const msg = e?.data?.error || e?.message || 'Impossible de terminer le service.';
-                                toast.add({ severity: 'error', summary: 'Erreur', detail: msg, life: 6000 });
                             }
                         }
-                    }
-                }));
+                    })
+                );
             }
         });
     } catch (e: any) {
