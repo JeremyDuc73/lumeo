@@ -28,12 +28,9 @@ security:
         main:
             lazy: true
             provider: app_user_provider
-            entry_point: form_login
-            form_login:
-                login_path: app_login
-                check_path: app_login
-                enable_csrf: true
-            custom_authenticator: App\Security\SecurityAuthenticator
+            custom_authenticators:
+                - App\Security\SecurityAuthenticator
+            entry_point: App\Security\SecurityAuthenticator
             logout:
                 path: app_logout
 
