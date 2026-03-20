@@ -16,10 +16,15 @@ use Symfony\Component\Routing\Attribute\Route;
 
 final class PaymentController extends AbstractController
 {
+    public function __construct(
+        private readonly string $stripeSecretKey,
+        private readonly string $frontBaseUrl,
+    ) {}
+
     #[Route('/api/payment/create', methods: ['POST'])]
     public function createPayment(Request $request): Response
     {
-        Stripe::setApiKey($_ENV['STRIPE_SECRET_KEY']);
+        Stripe::setApiKey($this->stripeSecretKey);
 
         $user = $this->getUser();
 
@@ -52,8 +57,8 @@ final class PaymentController extends AbstractController
                 'coins' => $coins,
             ],
             'mode' => 'payment',
-            'success_url' => rtrim($_ENV['FRONT_BASE_URL'] ?? ($_SERVER['FRONT_BASE_URL'] ?? 'http://localhost:3000'), '/') . '/payment-success?session_id={CHECKOUT_SESSION_ID}',
-            'cancel_url' => rtrim($_ENV['FRONT_BASE_URL'] ?? ($_SERVER['FRONT_BASE_URL'] ?? 'http://localhost:3000'), '/') . '/profile',
+            'success_url' => rtrim($this->frontBaseUrl ?: 'http://localhost:3000', '/') . '/payment-success?session_id={CHECKOUT_SESSION_ID}',
+            'cancel_url' => rtrim($this->frontBaseUrl ?: 'http://localhost:3000', '/') . '/profile',
         ]);
 
         return $this->json(['checkoutUrl' => $checkoutSession->url]);
@@ -61,7 +66,7 @@ final class PaymentController extends AbstractController
     #[Route('/api/payment/confirm-checkout', methods: ['POST'])]
     public function confirmCheckoutPayment(Request $request,  EntityManagerInterface $entityManager): Response
     {
-        Stripe::setApiKey($_ENV['STRIPE_SECRET_KEY']);
+        Stripe::setApiKey($this->stripeSecretKey);
 
         $data = json_decode($request->getContent(), true);
         if (!isset($data['session_id'])) {

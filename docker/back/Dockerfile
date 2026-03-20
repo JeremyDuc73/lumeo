@@ -64,7 +64,9 @@ ENV APP_ENV=prod \
     JWT_PASSPHRASE="build-time" \
     MESSENGER_TRANSPORT_DSN="doctrine://default?auto_setup=0" \
     MAILER_DSN="null://null" \
-    STRIPE_SECRET_KEY="sk_test_dummy"
+    STRIPE_SECRET_KEY="sk_test_dummy" \
+    FRONT_BASE_URL="http://localhost" \
+    CORS_ALLOW_ORIGIN="^https?://localhost$"
 
 # Run Symfony post-install scripts (cache warmup, etc.)
 RUN php bin/console cache:clear --env=prod --no-debug \
