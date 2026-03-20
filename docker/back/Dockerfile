@@ -1,0 +1,63 @@
+# =============================================================================
+# Lumeo Backend — Production Dockerfile (PHP-FPM + Nginx)
+# =============================================================================
+
+# ---- Stage 1: Composer dependencies ----
+FROM composer:2 AS vendor
+WORKDIR /app
+COPY back/composer.json back/composer.lock back/symfony.lock ./
+RUN composer install \
+    --no-dev \
+    --no-scripts \
+    --no-interaction \
+    --prefer-dist \
+    --optimize-autoloader \
+    --ignore-platform-reqs
+
+# ---- Stage 2: Node assets build ----
+FROM node:20-alpine AS assets
+WORKDIR /app
+COPY back/package.json back/package-lock.json ./
+RUN npm ci
+COPY back/assets ./assets
+COPY back/webpack.config.js back/postcss.config.mjs ./
+RUN npm run build
+
+# ---- Stage 3: PHP-FPM runtime ----
+FROM php:8.2-fpm-alpine AS php
+
+# System deps
+RUN apk add --no-cache \
+    icu-dev libpq-dev libzip-dev zip unzip \
+    && docker-php-ext-install intl pdo_pgsql opcache zip \
+    && docker-php-ext-enable opcache
+
+# PHP production config
+RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
+COPY docker/back/php.ini /usr/local/etc/php/conf.d/99-lumeo.ini
+
+WORKDIR /var/www
+
+# Copy application code
+COPY back/ .
+
+# Copy vendor from stage 1
+COPY --from=vendor /app/vendor ./vendor
+
+# Copy built assets from stage 2
+COPY --from=assets /app/public/build ./public/build
+
+# Run Symfony post-install scripts (cache warmup, etc.)
+RUN php bin/console cache:clear --env=prod --no-debug \
+    && php bin/console assets:install public --env=prod --no-debug \
+    && chown -R www-data:www-data var/
+
+EXPOSE 9000
+
+# ---- Stage 4: Nginx sidecar ----
+FROM nginx:1.27-alpine AS nginx
+
+COPY docker/back/nginx.conf /etc/nginx/conf.d/default.conf
+COPY --from=php /var/www/public /var/www/public
+
+EXPOSE 80

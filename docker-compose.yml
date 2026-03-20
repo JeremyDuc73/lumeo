@@ -1,0 +1,108 @@
+# =============================================================================
+# Lumeo — Local Development (docker compose up)
+# =============================================================================
+
+services:
+  # ---- PostgreSQL ----
+  database:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-lumeo}
+      POSTGRES_USER: ${POSTGRES_USER:-lumeo}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-lumeo}
+    ports:
+      - "${POSTGRES_PORT:-11603}:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "${POSTGRES_USER:-lumeo}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # ---- Mercure Hub ----
+  mercure:
+    image: dunglas/mercure
+    restart: unless-stopped
+    environment:
+      SERVER_NAME: ':80'
+      MERCURE_PUBLISHER_JWT_KEY: ${MERCURE_JWT_SECRET:-!ChangeThisMercureHubJWTSecretKey!}
+      MERCURE_SUBSCRIBER_JWT_KEY: ${MERCURE_JWT_SECRET:-!ChangeThisMercureHubJWTSecretKey!}
+      MERCURE_EXTRA_DIRECTIVES: |
+        cors_origins http://localhost:11600 http://localhost:11601
+        anonymous
+    command: /usr/bin/caddy run --config /etc/caddy/dev.Caddyfile
+    ports:
+      - "${MERCURE_PORT:-11602}:80"
+    volumes:
+      - mercure_data:/data
+      - mercure_config:/config
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost/healthz"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # ---- Backend PHP-FPM (dev) ----
+  back-php:
+    build:
+      context: .
+      dockerfile: docker/back/Dockerfile.dev
+    restart: unless-stopped
+    volumes:
+      - ./back:/var/www:cached
+    depends_on:
+      database:
+        condition: service_healthy
+    environment:
+      APP_ENV: dev
+      APP_DEBUG: 1
+      APP_SECRET: ${APP_SECRET:-changeThisToASecretKey123}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-lumeo}:${POSTGRES_PASSWORD:-lumeo}@database:5432/${POSTGRES_DB:-lumeo}?serverVersion=16&charset=utf8
+      MERCURE_URL: http://mercure/.well-known/mercure
+      MERCURE_PUBLIC_URL: http://localhost:${MERCURE_PORT:-11602}/.well-known/mercure
+      MERCURE_JWT_SECRET: ${MERCURE_JWT_SECRET:-!ChangeThisMercureHubJWTSecretKey!}
+      JWT_SECRET_KEY: '%kernel.project_dir%/config/jwt/private.pem'
+      JWT_PUBLIC_KEY: '%kernel.project_dir%/config/jwt/public.pem'
+      JWT_PASSPHRASE: ${JWT_PASSPHRASE:-lumeo}
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
+      FRONT_BASE_URL: http://localhost:11600
+      CORS_ALLOW_ORIGIN: '^https?://(localhost|127\.0\.0\.1)(:[0-9]+)?$$'
+
+  # ---- Backend Nginx (serves PHP-FPM) ----
+  back-nginx:
+    image: nginx:1.27-alpine
+    restart: unless-stopped
+    volumes:
+      - ./docker/back/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./back/public:/var/www/public:ro
+    ports:
+      - "${BACK_PORT:-11601}:80"
+    depends_on:
+      - back-php
+
+  # ---- Frontend Nuxt (dev with HMR) ----
+  front:
+    build:
+      context: .
+      dockerfile: docker/front/Dockerfile.dev
+    restart: unless-stopped
+    volumes:
+      - ./front:/app:cached
+      - front_node_modules:/app/node_modules
+    ports:
+      - "${FRONT_PORT:-11600}:3000"
+    environment:
+      NUXT_PUBLIC_API_BASE: http://localhost:${BACK_PORT:-11601}/api
+      NUXT_PUBLIC_MERCURE_HUB: http://localhost:${MERCURE_PORT:-11602}/.well-known/mercure
+      NUXT_PUBLIC_SERVER_BASE: http://localhost:${BACK_PORT:-11601}
+      NUXT_PUBLIC_STRIPE_PUBLIC_KEY: ${STRIPE_PUBLIC_KEY:-}
+    depends_on:
+      - back-nginx
+
+volumes:
+  db_data:
+  mercure_data:
+  mercure_config:
+  front_node_modules:

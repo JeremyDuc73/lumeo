@@ -1,0 +1,42 @@
+# =============================================================================
+# Lumeo Monorepo .gitignore
+# =============================================================================
+
+# ---- Environment ----
+.env
+.env.local
+.env.*.local
+
+# ---- IDE ----
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# ---- Node ----
+node_modules/
+front/node_modules/
+back/node_modules/
+front/.nuxt/
+front/.output/
+front/.data/
+front/dist/
+
+# ---- PHP / Symfony ----
+back/vendor/
+back/var/
+back/public/build/
+back/public/bundles/
+back/.phpunit.result.cache
+back/phpunit.xml
+
+# ---- JWT keys (generated per environment) ----
+back/config/jwt/*.pem
+
+# ---- Docker volumes ----
+docker/volumes/
+
+# ---- OS ----
+Thumbs.db

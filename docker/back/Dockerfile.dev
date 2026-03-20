@@ -1,0 +1,27 @@
+# =============================================================================
+# Lumeo Backend — Development Dockerfile (PHP-FPM with Xdebug)
+# =============================================================================
+FROM php:8.2-fpm-alpine
+
+RUN apk add --no-cache \
+    icu-dev libpq-dev libzip-dev zip unzip git bash \
+    autoconf gcc g++ make linux-headers \
+    && docker-php-ext-install intl pdo_pgsql zip \
+    && pecl install xdebug \
+    && docker-php-ext-enable xdebug \
+    && apk del autoconf gcc g++ make linux-headers
+
+# Install Composer
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+
+# Symfony CLI (optional but handy)
+RUN apk add --no-cache curl \
+    && curl -1sLf 'https://dl.cloudsmith.io/public/symfony/stable/setup.alpine.sh' | bash \
+    && apk add --no-cache symfony-cli || true
+
+WORKDIR /var/www
+
+# Expose PHP-FPM
+EXPOSE 9000
+
+CMD ["php-fpm"]

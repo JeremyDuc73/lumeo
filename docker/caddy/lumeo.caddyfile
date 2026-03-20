@@ -1,0 +1,91 @@
+# ============================================
+# Lumeo - Micro-services Platform
+# Add this block to /etc/caddy/Caddyfile
+# ============================================
+lumeo.jeremyduc.dev {
+    # Logs
+    log {
+        output file /var/log/caddy/lumeo.log
+        format json
+    }
+
+    # Security headers
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+        X-Frame-Options "SAMEORIGIN"
+        X-Content-Type-Options "nosniff"
+        X-XSS-Protection "1; mode=block"
+        Referrer-Policy "strict-origin-when-cross-origin"
+        -Server
+    }
+
+    # Mercure Hub (SSE — requires streaming)
+    handle /.well-known/mercure {
+        reverse_proxy localhost:11602 {
+            header_up Host {host}
+            header_up X-Real-IP {remote_host}
+            header_up X-Forwarded-For {remote_host}
+            header_up X-Forwarded-Proto {scheme}
+            flush_interval -1
+            transport http {
+                read_timeout 0
+            }
+        }
+    }
+
+    # Backend API
+    handle /api/* {
+        reverse_proxy localhost:11601 {
+            header_up Host {host}
+            header_up X-Real-IP {remote_host}
+            header_up X-Forwarded-For {remote_host}
+            header_up X-Forwarded-Proto {scheme}
+        }
+    }
+
+    # EasyAdmin panel
+    handle /admin* {
+        reverse_proxy localhost:11601 {
+            header_up Host {host}
+            header_up X-Real-IP {remote_host}
+            header_up X-Forwarded-For {remote_host}
+            header_up X-Forwarded-Proto {scheme}
+        }
+    }
+
+    # Uploaded images (VichUploader)
+    handle /images/* {
+        reverse_proxy localhost:11601 {
+            header_up Host {host}
+        }
+    }
+
+    # Symfony built assets
+    handle /build/* {
+        reverse_proxy localhost:11601 {
+            header_up Host {host}
+        }
+    }
+
+    # Frontend (Nuxt SSR — catch-all)
+    handle {
+        reverse_proxy localhost:11600 {
+            header_up Host {host}
+            header_up X-Real-IP {remote_host}
+            header_up X-Forwarded-For {remote_host}
+            header_up X-Forwarded-Proto {scheme}
+        }
+    }
+
+    # Error pages
+    handle_errors {
+        @502 expression {http.error.status_code} == 502
+        handle @502 {
+            respond "Service temporairement indisponible. Réessayez dans quelques instants." 502
+        }
+    }
+}
+
+www.lumeo.jeremyduc.dev {
+    redir https://lumeo.jeremyduc.dev{uri} permanent
+}
