@@ -93,6 +93,21 @@ lumeo.jeremyduc.dev {
     }
 }
 
+# Admin panel (EasyAdmin) — separate subdomain
+admin.lumeo.jeremyduc.dev {
+    log {
+        output file /var/log/caddy/lumeo-admin.log
+        format json
+    }
+
+    reverse_proxy localhost:11601 {
+        header_up Host {host}
+        header_up X-Real-IP {remote_host}
+        header_up X-Forwarded-For {remote_host}
+        header_up X-Forwarded-Proto {scheme}
+    }
+}
+
 www.lumeo.jeremyduc.dev {
     redir https://lumeo.jeremyduc.dev{uri} permanent
 }

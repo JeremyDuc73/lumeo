@@ -71,6 +71,7 @@ services:
       STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
       FRONT_BASE_URL: ${FRONT_BASE_URL}
       CORS_ALLOW_ORIGIN: ${CORS_ALLOW_ORIGIN}
+      TRUSTED_PROXIES: REMOTE_ADDR
     volumes:
       - back_uploads:/var/www/public/images
       - back_jwt:/var/www/config/jwt

@@ -66,7 +66,8 @@ ENV APP_ENV=prod \
     MAILER_DSN="null://null" \
     STRIPE_SECRET_KEY="sk_test_dummy" \
     FRONT_BASE_URL="http://localhost" \
-    CORS_ALLOW_ORIGIN="^https?://localhost$"
+    CORS_ALLOW_ORIGIN="^https?://localhost$" \
+    TRUSTED_PROXIES="127.0.0.1"
 
 # Run Symfony post-install scripts (cache warmup, etc.)
 RUN php bin/console cache:clear --env=prod --no-debug \
