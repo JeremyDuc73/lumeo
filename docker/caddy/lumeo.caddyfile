@@ -67,6 +67,13 @@ lumeo.jeremyduc.dev {
         }
     }
 
+    # Symfony bundles assets (EasyAdmin, etc.)
+    handle /bundles/* {
+        reverse_proxy localhost:11601 {
+            header_up Host {host}
+        }
+    }
+
     # Frontend (Nuxt SSR — catch-all)
     handle {
         reverse_proxy localhost:11600 {
